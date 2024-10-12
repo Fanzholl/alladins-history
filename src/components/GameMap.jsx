@@ -12,24 +12,9 @@ const GameMap = () => {
   // Функция для запроса данных
   const getMapData = async () => {
     try {
-      const response = await axios.post(
-        'https://games-test.datsteam.dev/play/magcarp/player/move',
-        {
-          transports: [
-            {
-              acceleration: { x: 0, y: 0 }, // Примерное значение ускорения
-              activateShield: false, // Примерное значение щита
-              attack: { x: 0, y: 0 }, // Примерное значение атаки
-              id: '00000000-0000-0000-0000-000000000000', // ID ковра
-            },
-          ],
-        },
-        {
-          headers: {
-            'X-Auth-Token': '67091e754514f67091e7545153',
-            'Content-Type': 'application/json',
-          },
-        }
+      // Выполняем GET-запрос по указанному URL
+      const response = await axios.get(
+        'https://36a1-185-172-129-203.ngrok-free.app/game'
       );
 
       // Сохраняем данные карты, включая новые координаты ковров
@@ -53,15 +38,32 @@ const GameMap = () => {
     ctx.translate(offset.x, offset.y);
 
     // Отрисовка аномалий
+    // Отрисовка аномалий
     anomalies.forEach((anomaly) => {
-      const { x, y, radius, strength } = anomaly;
+      const { x, y, radius, strength, effectiveRadius } = anomaly;
+
+      // Отрисовка радиуса действия аномалии (внешний круг, effectiveRadius)
+      if (effectiveRadius) {
+        ctx.beginPath();
+        ctx.arc(x * scaleX, y * scaleY, effectiveRadius * scale, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rbga(1, 1, 1, 0.1)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)'; // Полупрозрачный чёрный для радиуса действия
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Отрисовка самой аномалии (внутренний круг, radius)
       ctx.beginPath();
       ctx.arc(x * scaleX, y * scaleY, radius * scale, 0, 2 * Math.PI);
       ctx.fillStyle = strength > 0 ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 0, 255, 0.4)'; // Красные — притягивающие, синие — отталкивающие
       ctx.fill();
-      ctx.strokeStyle = 'black'; // Граница аномалий
+      ctx.strokeStyle = 'black'; // Граница аномалии
+      ctx.lineWidth = 5;
       ctx.stroke();
     });
+
+
 
     // Отрисовка ковров игроков
     transports.forEach((transport, index) => {
